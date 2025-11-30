@@ -5,6 +5,7 @@ import torch
 from torchvision import models, transforms
 from PIL import Image
 import io
+from src.database import add_sighting
 
 # שימו לב: אין כאן import streamlit!
 
@@ -57,7 +58,12 @@ async def predict_image(file: UploadFile = File(...)):
     label = class_names[predicted_idx]
 
     # כאן בהמשך תוסיף את השמירה לדאטה-בייס
-
+    add_sighting(
+        filename=file.filename,
+        species=label,
+        confidence=confidence,
+        condition="Pending"
+    )
     return {
         "species": label,
         "confidence": f"{confidence:.2f}"
