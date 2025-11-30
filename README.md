@@ -4,9 +4,9 @@ An automated system for wildlife monitoring using Computer Vision and Deep Learn
 This project is designed to identify animal species from camera trap images and analyze their physical condition (Healthy/Injured) to aid conservation efforts.
 
 ## 👥 The Team
-Iftah Ohayon
-Alexay Laikov
-Talia Barzilai
+* Iftah Ohayon
+* Alexay Laikov
+* Talia Barzilai
 
 ## 🚀 Features
 * **Species Classification:** Automatically identifies Israeli wildlife (Gazelles, Foxes, Boars, etc.) using Transfer Learning (ResNet50).
