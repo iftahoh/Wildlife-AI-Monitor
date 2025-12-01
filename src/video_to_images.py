@@ -21,7 +21,7 @@ def extract_frames_from_folder(source_folder, dest_folder, interval=30):
     print(f"Starting to process videos in {source_folder}...")
 
     for file_name in files:
-        if file_name.endswith((".mp4", ".AVI", ".avi", ".MOV", ".mkv")):
+        if file_name.lower().endswith((".mp4", ".avi", ".mov", ".mkv", ".mts", ".asf", ".wmv", ".mpg")):
             video_path = os.path.join(source_folder, file_name)
             cap = cv2.VideoCapture(video_path)
 
@@ -58,10 +58,10 @@ if __name__ == "__main__":
     # שנה את הנתיבים האלה לפי המחשב שלך!
 
     # איפה הסרטונים הגולמיים שקיבלתם
-    videos_path = r"C:\Users\iftah\Desktop\Raw_Videos\Gazelle"
+    videos_path = r"C:\Users\iftah\Desktop\hyena"
 
     # לאן לשפוך את התמונות המוכנות (לתוך תיקיית האימון של הפרויקט)
-    images_output_path = r"../data/train/gazelle"
+    images_output_path = r"../data/train/hyena"
 
     # הפעלה
     extract_frames_from_folder(videos_path, images_output_path, interval=30)

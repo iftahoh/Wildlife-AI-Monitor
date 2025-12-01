@@ -8,9 +8,7 @@ import time
 
 
 def main():
-    # 1. הגדרות (Settings)
-    # שנו את זה לנתיב המלא במחשב שלכם איפה ששמרתם את התמונות
-    # למשל: "C:/Projects/WildlifeMonitor/data"
+    # נתיב למאגר
     data_dir = '../data'
 
     # בדיקה אם יש כרטיס מסך חזק (GPU) או משתמשים במעבד (CPU)

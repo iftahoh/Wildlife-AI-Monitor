@@ -13,7 +13,7 @@ from src.database import add_sighting
 app = FastAPI()
 
 # 2. הגדרת המודל
-class_names = ['fox', 'gazelle']
+class_names = ['fox', 'gazelle','hyena','porcupine', 'rabbit']
 device = torch.device("cpu")
 
 model = models.resnet50(pretrained=False)  # טעינת המבנה
