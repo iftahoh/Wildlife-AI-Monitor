@@ -1,36 +1,58 @@
 # Wildlife AI Monitor 🦌📷
 
-An automated system for wildlife monitoring using Computer Vision and Deep Learning.
-This project is designed to identify animal species from camera trap images and analyze their physical condition (Healthy/Injured) to aid conservation efforts.
+An automated system for wildlife monitoring using Computer Vision and Deep Learning.  
+This project analyzes camera-trap images to detect wildlife species, count individuals, and support future analysis of physical condition (Healthy / Injured) in order to aid conservation efforts.
 
 ## 👥 The Team
-* Iftah Ohayon
-* Alexay Laikov
-* Talia Barzilai
+* Iftah Ohayon  
+* Alexey Laikov  
+* Talia Barzilai  
 
 ## 🚀 Features
-* **Species Classification:** Automatically identifies Israeli wildlife (Gazelles, Foxes, Boars, etc.) using Transfer Learning (ResNet50).
-* **Health Analysis:** (In Progress) Detects signs of injury or malnutrition.
-* **Live Dashboard:** A user-friendly web interface for uploading images and viewing real-time analytics.
-* **Data Logging:** Automatically saves sighting history and confidence scores to a database.
+* **Object Detection (YOLOv8):** Detects and localizes multiple animals per image using bounding boxes.
+* **Species Classification (Baseline):** Identifies Israeli wildlife (Gazelles, Foxes, Boars, etc.) using Transfer Learning (ResNet50).
+* **Health Analysis:** (In Progress) Planned detection of injury or malnutrition based on cropped detections.
+* **Live Dashboard:** A user-friendly Streamlit interface for uploading images and viewing predictions.
+* **Data Logging:** Automatically saves detection results and confidence scores to a database.
 
 ## 🛠️ Tech Stack
 * **Language:** Python 3.9+
-* **AI/ML:** PyTorch, Torchvision (ResNet50 / YOLOv8)
+* **AI / ML:** PyTorch, Torchvision, Ultralytics YOLOv8
 * **Backend:** FastAPI, Uvicorn
 * **Frontend:** Streamlit
-* **Database:** SQLite (Development), PostgreSQL (Production)
+* **Database:** SQLite (Development), PostgreSQL (Planned)
 * **Image Processing:** OpenCV, PIL
 
 ## 📂 Project Structure
 ```text
 Wildlife-AI-Monitor/
-├── data/                  # Raw images (Train/Val) - *Not in Git*
-├── models/                # Trained model weights (.pt files)
+├── data/
+│   ├── YOLO/                  # YOLO-formatted dataset (generated locally)
+│   │   ├── images/
+│   │   │   ├── train/
+│   │   │   └── val/
+│   │   └── labels/
+│   │       ├── train/
+│   │       └── val/
+│   └── raw/                   # Raw images and XML annotations (Not in Git)
+│
+├── models/                    # Trained model weights (.pt files)
+│
 ├── src/
-│   ├── api.py             # FastAPI backend server
-│   ├── dashboard.py       # Streamlit frontend interface
-│   ├── database.py        # Database management
-│   └── train_model.py     # Training script (PyTorch)
-├── requirements.txt       # Python dependencies
-└── README.md              # Project documentation
+│   ├── api.py                 # FastAPI backend server
+│   ├── dashboard.py           # Streamlit frontend interface
+│   ├── database.py            # Database management
+│   ├── train_model.py         # Baseline ResNet training script
+│   ├── xml_to_yolo.py         # XML → YOLO annotation conversion
+│   └── video_to_images.py     # Video to frames extraction
+│
+├── requirements.txt           # Python dependencies
+└── README.md                  # Project documentation
+```
+
+## ⚙️ Environment Setup
+python -m venv .venv 
+
+.\.venv\Scripts\activate
+
+pip install -r requirements.txt
