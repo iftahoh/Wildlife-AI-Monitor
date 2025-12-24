@@ -8,7 +8,7 @@ import time
 
 
 def main():
-    # נתיב למאגר
+    # נתיב למאגרpython
     data_dir = '../data'
 
     # בדיקה אם יש כרטיס מסך חזק (GPU) או משתמשים במעבד (CPU)
