@@ -1,0 +1,12 @@
+# נתיב מלא לתיקייה הראשית של הנתונים
+path: "C:/Users/iftah/Desktop/All Files/לימודים/שנה ג/פרוייקט גמר/Wildlife-AI-Monitor/data/YOLO"
+
+train: images/train
+val: images/train
+
+names:
+  0: fox
+  1: gazelle
+  2: hyena
+  3: porcupine
+  4: rabbit

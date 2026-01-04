@@ -67,9 +67,24 @@ def batch_convert(xml_dir: str, labels_out_dir: str):
         out_txt_path = os.path.join(labels_out_dir, txt_name)
         convert_xml_file(xml_path, out_txt_path)
 
+
 if __name__ == "__main__":
-    xml_dir = r"data\train\labelImag_out"
-    labels_out_dir = r"data\YOLO\labels\train"
-    batch_convert(xml_dir, labels_out_dir)
-    print("Done.")
+    # מוצא את התיקייה שבה הקובץ הנוכחי (xml_to_yolo.py) נמצא
+    current_script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # הולך צעד אחד אחורה לתיקייה הראשית של הפרויקט (יוצא מ-src)
+    project_root = os.path.dirname(current_script_dir)
+
+    # בונה את הנתיב המלא לתיקיית הנתונים בצורה בטוחה
+    xml_dir = os.path.join(project_root, 'data', 'train', 'gazelle', 'Recgazelle')
+    labels_out_dir = os.path.join(project_root, 'data', 'YOLO', 'labels', 'train')
+
+    print(f"Looking for XMLs in: {xml_dir}")
+
+    if not os.path.exists(xml_dir):
+        print(f"Error: The folder '{xml_dir}' does not exist!")
+        print("Please check if the folder name is correct (capital letters matter) and that it contains the XML files.")
+    else:
+        batch_convert(xml_dir, labels_out_dir)
+        print("Done.")
 
