@@ -9,7 +9,7 @@ import time
 
 def main():
     # נתיב למאגרpython
-    data_dir = '../data'
+    data_dir = '../../data'
 
     # בדיקה אם יש כרטיס מסך חזק (GPU) או משתמשים במעבד (CPU)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

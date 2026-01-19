@@ -61,7 +61,7 @@ if __name__ == "__main__":
     videos_path = r"C:\Users\iftah\Desktop\hyena"
 
     # לאן לשפוך את התמונות המוכנות (לתוך תיקיית האימון של הפרויקט)
-    images_output_path = r"../data/train/hyena"
+    images_output_path = r"../../data/train/hyena"
 
     # הפעלה
     extract_frames_from_folder(videos_path, images_output_path, interval=30)

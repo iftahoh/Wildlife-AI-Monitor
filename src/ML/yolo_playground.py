@@ -7,9 +7,9 @@ SRC_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = SRC_DIR.parent
 
 # --- שינוי 1: נתיב למודל המאומן שלך ---
-# הנחה: האימון נשמר בתיקיית runs בתוך הפרויקט. אם זה במקום אחר, תעדכן את הנתיב הזה.
+# הנחה: האימון נשמר בתיקיית modelsRun בתוך הפרויקט. אם זה במקום אחר, תעדכן את הנתיב הזה.
 # תחפש במחשב קובץ בשם best.pt ותעתיק את הנתיב שלו לכאן אם השורה למטה לא עובדת.
-MODEL_PATH =  r"C:\Users\iftah\Desktop\All Files\לימודים\שנה ג\פרוייקט גמר\Wildlife-AI-Monitor\src\runs\detect\train3\weights\best.pt"
+MODEL_PATH = r"/src/modelsRun\detect\train3\weights\best.pt"
 
 INPUT_IMAGE = SRC_DIR / "../data/train/gazelle/test.jpg"
 OUTPUT_DIR = PROJECT_DIR / "outputs"

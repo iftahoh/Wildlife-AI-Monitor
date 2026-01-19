@@ -3,7 +3,7 @@ import os
 
 # --- כאן נשים את הנתיב למודל שלך ---
 # נסה למצוא את הנתיב הזה בדיוק במחשב שלך
-model_path = r"C:\Users\iftah\Desktop\All Files\לימודים\שנה ג\פרוייקט גמר\Wildlife-AI-Monitor\src\runs\detect\train3\weights\best.pt"
+model_path = r"/src/modelsRun\detect\train3\weights\best.pt"
 
 print(f"Checking model at: {model_path}")
 

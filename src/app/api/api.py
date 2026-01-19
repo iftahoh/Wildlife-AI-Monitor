@@ -4,19 +4,22 @@ import uvicorn
 from ultralytics import YOLO
 import cv2
 import numpy as np
-from src.database import  add_sighting
+from src.app.DB.database import  add_sighting
+from pathlib import Path
 import io
 
 app = FastAPI()
 
 
-MODEL_PATH = r"C:\Users\iftah\Desktop\All Files\לימודים\שנה ג\פרוייקט גמר\Wildlife-AI-Monitor\src\runs\detect\train4\weights\best.pt"
+BASE_DIR = Path(__file__).resolve().parent
+
+MODEL_PATH = BASE_DIR / "models" / "best.pt"
 
 try:
     model = YOLO(MODEL_PATH)
 except Exception as e:
     print(f"Error loading model: {e}")
-    model = YOLO("yolov8n.pt")
+    model = YOLO("../../ML/yolov8n.pt")
 
 
 @app.post("/predict")
