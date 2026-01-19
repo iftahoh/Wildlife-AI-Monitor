@@ -4,60 +4,69 @@ import uvicorn
 from ultralytics import YOLO
 import cv2
 import numpy as np
-from src.app.DB.database import  add_sighting
 from pathlib import Path
-import io
+import sys
+import os
+
+# הוספת התיקייה הראשית לנתיב החיפוש כדי שה-import יעבוד
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../..')))
+
+from src.app.DB.database import add_sighting
 
 app = FastAPI()
 
+# --- התיקון לנתיב המודל ---
+# 1. מציאת התיקייה שבה נמצא api.py (שהיא src/app/api)
+CURRENT_DIR = Path(__file__).resolve().parent
 
-BASE_DIR = Path(__file__).resolve().parent
+# 2. עליה שתי קומות למעלה כדי להגיע ל-src (src/app/api -> src/app -> src)
+SRC_DIR = CURRENT_DIR.parent.parent
 
-MODEL_PATH = BASE_DIR / "models" / "best.pt"
+# 3. בניית הנתיב לתיקיית models שנמצאת בתוך src
+MODEL_PATH = SRC_DIR / "models" / "best.pt"
 
-try:
+print(f"Looking for model at: {MODEL_PATH}")
+
+if not MODEL_PATH.exists():
+    print(f"❌ Error: Model not found at {MODEL_PATH}")
+    # טוען מודל ברירת מחדל רק אם לא מוצא את המותאם
+    model = YOLO("yolov8n.pt")
+else:
     model = YOLO(MODEL_PATH)
-except Exception as e:
-    print(f"Error loading model: {e}")
-    model = YOLO("../../ML/yolov8n.pt")
+    print("✅ Custom model loaded successfully!")
 
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    # 1. קריאת תמונה
+    # קריאת התמונה
     contents = await file.read()
     nparr = np.frombuffer(contents, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-    # 2. זיהוי
+    # זיהוי
     results = model(img)
 
-    # --- חישוב הנתונים לשמירה ---
-    # ספירת כמות הריבועים שזוהו
+    # ספירת כמות וזיהוי סוג
     quantity = len(results[0].boxes)
-
-    # בדיקה איזו חיה זוהתה (לוקחים את הראשונה כנציגה, או "Unknown" אם לא מצא כלום)
     if quantity > 0:
-        # שליפת ה-ID של המחלקה הראשונה שזוהתה
         first_cls_id = int(results[0].boxes.cls[0].item())
         species_name = model.names[first_cls_id]
         confidence = float(results[0].boxes.conf[0].item())
-    else:
-        species_name = "None"
-        confidence = 0.0
 
-    # 3. שמירה לדאטה-בייס עם הכמות החדשה!
-    # (מוודאים שלא שומרים אם לא זוהה כלום, או שומרים כ-None לבחירתך)
-    if quantity > 0:
-        add_sighting(
-            filename=file.filename,
-            species=species_name,
-            quantity=quantity,  # <--- הנה הכמות
-            confidence=confidence,
-            condition="Pending"
-        )
+        # שמירה לדאטה-בייס
+        try:
+            add_sighting(
+                filename=file.filename,
+                species=species_name,
+                quantity=quantity,
+                confidence=confidence,
+                condition="Pending"
+            )
+            print(f"Saved to DB: {species_name} (x{quantity})")
+        except Exception as e:
+            print(f"Error saving to DB: {e}")
 
-    # 4. ציור והחזרת תמונה (כמו מקודם)
+    # החזרת תמונה מסומנת
     annotated_img = results[0].plot()
     success, encoded_image = cv2.imencode('.jpg', annotated_img)
     return Response(content=encoded_image.tobytes(), media_type="image/jpeg")
