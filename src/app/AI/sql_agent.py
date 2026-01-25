@@ -34,7 +34,7 @@ def text_to_sql(user_question):
     3. Ignore case sensitivity for species names (use LOWER() if needed).
     """
 
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-2.0-flash-exp')
 
     try:
         response = model.generate_content(prompt)
