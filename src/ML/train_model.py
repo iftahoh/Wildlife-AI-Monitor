@@ -8,8 +8,13 @@ import time
 
 
 def main():
-    # נתיב למאגרpython
-    data_dir = '../../data'
+    # --- תיקון מס' 1: חישוב נתיב חכם ---
+    # מוצא את המיקום של הקובץ הזה (train_model.py)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # הולך שתי תיקיות אחורה כדי להגיע לתיקיית data
+    data_dir = os.path.join(current_dir, '../../data')
+
+    print(f"Looking for data in: {os.path.abspath(data_dir)}")
 
     # בדיקה אם יש כרטיס מסך חזק (GPU) או משתמשים במעבד (CPU)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -32,9 +37,14 @@ def main():
     }
 
     # טעינת המידע
-    # שימו לב: אם אין לכם תמונות בתיקיות עדיין - זה יזרוק שגיאה
-    image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x), data_transforms[x])
-                      for x in ['train', 'val']}
+    try:
+        image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x), data_transforms[x])
+                          for x in ['train', 'val']}
+    except FileNotFoundError as e:
+        print(f"\n❌ Error: Could not find folders in {data_dir}")
+        print("Make sure you have a 'data' folder with 'train' and 'val' inside.")
+        print(f"System Error: {e}")
+        return
 
     # num_workers=0 חשוב מאוד ב-Windows כדי למנוע קריסות!
     dataloaders = {x: DataLoader(image_datasets[x], batch_size=4, shuffle=True, num_workers=0)
@@ -109,11 +119,15 @@ def main():
     print(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
 
     # 5. שמירה
-    save_path = '../models/species_model.pt'
+    # --- תיקון מס' 2: שם המודל הנכון ---
+    save_path = os.path.join(current_dir, '../models/health_model.pt')
+
+    # וידוא שתיקיית המודלים קיימת
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+
     torch.save(model.state_dict(), save_path)
-    print(f"Model saved to {save_path}")
+    print(f"✅ Model saved successfully to: {os.path.abspath(save_path)}")
 
 
 if __name__ == '__main__':
-    # החלק הזה קריטי ב-PyCharm! בלעדיו הקוד לא ירוץ טוב
     main()

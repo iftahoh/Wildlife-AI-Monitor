@@ -9,7 +9,11 @@ PROJECT_DIR = SRC_DIR.parent
 # --- שינוי 1: נתיב למודל המאומן שלך ---
 # הנחה: האימון נשמר בתיקיית modelsRun בתוך הפרויקט. אם זה במקום אחר, תעדכן את הנתיב הזה.
 # תחפש במחשב קובץ בשם best.pt ותעתיק את הנתיב שלו לכאן אם השורה למטה לא עובדת.
-MODEL_PATH = r"/src/modelsRun\detect\train3\weights\best.pt"
+# שורה מקורית (למחוק או לשים בהערה):
+# MODEL_PATH = r"/src/modelsRun\detect\train3\weights\best.pt"
+
+# שורה חדשה ומתוקנת:
+MODEL_PATH = PROJECT_DIR / "models" / "best.pt"
 
 INPUT_IMAGE = SRC_DIR / "../data/train/gazelle/test.jpg"
 OUTPUT_DIR = PROJECT_DIR / "outputs"

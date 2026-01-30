@@ -3,19 +3,10 @@ import os
 
 
 def extract_frames_from_folder(source_folder, dest_folder, interval=30):
-    """
-    :param source_folder: איפה הסרטונים יושבים
-    :param dest_folder: איפה לשמור את התמונות
-    :param interval: כל כמה פריימים לשמור תמונה (30 = בערך תמונה אחת לשניה)
-    """
-
-    # יצירת תיקיית היעד אם לא קיימת
     if not os.path.exists(dest_folder):
         os.makedirs(dest_folder)
 
-    # מעבר על כל הקבצים בתיקייה
     files = os.listdir(source_folder)
-    video_count = 0
     total_images = 0
 
     print(f"Starting to process videos in {source_folder}...")
@@ -27,6 +18,7 @@ def extract_frames_from_folder(source_folder, dest_folder, interval=30):
 
             frame_count = 0
             saved_count = 0
+            animal_type = os.path.basename(source_folder)
             video_name = os.path.splitext(file_name)[0]
 
             while cap.isOpened():
@@ -34,12 +26,9 @@ def extract_frames_from_folder(source_folder, dest_folder, interval=30):
                 if not ret:
                     break
 
-                # שמירה רק אם עברנו את המרווח שקבענו (למשל כל 30 פריימים)
                 if frame_count % interval == 0:
-                    # יצירת שם ייחודי לתמונה: videoName_frameNumber.jpg
-                    out_name = f"{video_name}_f{frame_count}.jpg"
+                    out_name = f"{animal_type}_{video_name}_f{frame_count}.jpg"
                     out_path = os.path.join(dest_folder, out_name)
-
                     cv2.imwrite(out_path, frame)
                     saved_count += 1
                     total_images += 1
@@ -47,21 +36,42 @@ def extract_frames_from_folder(source_folder, dest_folder, interval=30):
                 frame_count += 1
 
             cap.release()
-            video_count += 1
             print(f"Finished {file_name}: Extracted {saved_count} images.")
 
-    print(f"Done! Processed {video_count} videos, created {total_images} images.")
+    print(f"Done with folder {os.path.basename(source_folder)}! Created {total_images} images.")
 
 
 if __name__ == "__main__":
-    # --- הגדרות ---
-    # שנה את הנתיבים האלה לפי המחשב שלך!
+    # --- הגדרות אוטומטיות ---
 
-    # איפה הסרטונים הגולמיים שקיבלתם
-    videos_path = r"C:\Users\iftah\Desktop\hyena"
+    # הפקודה הזו מוצאת לבד את תיקיית המסמכים שלך במחשב
+    # היא מחפשת: C:\Users\YourName\Documents
+    user_documents = os.path.join(os.path.expanduser("~"), "Documents")
 
-    # לאן לשפוך את התמונות המוכנות (לתוך תיקיית האימון של הפרויקט)
-    images_output_path = r"../../data/train/hyena"
+    # כאן אנחנו מוסיפים את שם התיקייה שיצרת ("healthy" או "בריאה")
+    # אם קראת לתיקייה בעברית "בריאה", תחליפי את "healthy" ב-"בריאה"
+    base_videos_path = os.path.join(user_documents, "healthy")
 
-    # הפעלה
-    extract_frames_from_folder(videos_path, images_output_path, interval=30)
+    # לאן לשפוך את התמונות (לתוך הפרויקט)
+    images_output_path = r"../../data/train/healthy"
+
+    print(f"Looking for animal folders in: {base_videos_path}")
+
+    if os.path.exists(base_videos_path):
+        all_items = os.listdir(base_videos_path)
+
+        found_any = False
+        for item in all_items:
+            item_path = os.path.join(base_videos_path, item)
+            if os.path.isdir(item_path):
+                print(f"\n--- Found animal folder: {item} ---")
+                extract_frames_from_folder(item_path, images_output_path, interval=30)
+                found_any = True
+
+        if found_any:
+            print("\n✅ All finished! Check your project data folder.")
+        else:
+            print("\n⚠️ Found the 'healthy' folder, but it has no animal folders inside.")
+    else:
+        print(f"❌ Error: Could not find the folder: {base_videos_path}")
+        print("Please make sure you created a folder named 'healthy' inside your Documents.")
