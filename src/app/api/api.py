@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 from torchvision import models, transforms
 from PIL import Image
-import torch.nn.functional as F  # הוספנו את זה לחישוב אחוזים
+import torch.nn.functional as F
 
 # --- הגדרת נתיבים ---
 CURRENT_DIR = Path(__file__).resolve().parent
@@ -57,15 +57,13 @@ else:
     print("❌ Error: Health model file not found!")
     health_model = None
 
-# הכנת התמונה
+# הכנת התמונה - כיווץ (Resize) במקום חיתוך!
 health_transforms = transforms.Compose([
-    transforms.Resize(256),
-    transforms.CenterCrop(224),
+    transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 
-# סדר הקטגוריות - חשוב מאוד! בדרך כלל אלפביתי
 class_names = ['healthy', 'injured']
 
 
@@ -75,66 +73,61 @@ async def predict(file: UploadFile = File(...)):
     nparr = np.frombuffer(contents, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-    # 1. YOLO
+    # 1. YOLO מזהה
     results = yolo_model(img)
     quantity = len(results[0].boxes)
-    annotated_img = img.copy()
+    annotated_img = results[0].plot()  # YOLO מצייר את כל המלבנים
 
     final_species = "Unknown"
     final_confidence = 0.0
-    final_health = "Unknown"
+    overall_health = "healthy"  # ברירת מחדל: בריא, אלא אם נמצא פצוע
 
     if quantity > 0:
-        box = results[0].boxes[0]
-        cls_id = int(box.cls[0].item())
-        final_species = yolo_model.names[cls_id]
-        final_confidence = float(box.conf[0].item())
+        # לולאה שעוברת על **כל** החיות ש-YOLO מצא בתמונה
+        for box in results[0].boxes:
+            cls_id = int(box.cls[0].item())
+            final_species = yolo_model.names[cls_id]
+            final_confidence = float(box.conf[0].item())
 
-        # 2. Health Check
-        if health_model is not None:
-            x1, y1, x2, y2 = map(int, box.xyxy[0].cpu().numpy())
-            h, w, _ = img.shape
-            x1, y1 = max(0, x1), max(0, y1)
-            x2, y2 = min(w, x2), min(h, y2)
+            # 2. שולחים כל חיה לרופא (Health Check)
+            if health_model is not None:
+                x1, y1, x2, y2 = map(int, box.xyxy[0].cpu().numpy())
+                h, w, _ = img.shape
+                x1, y1 = max(0, x1), max(0, y1)
+                x2, y2 = min(w, x2), min(h, y2)
 
-            animal_crop = img[y1:y2, x1:x2]
+                animal_crop = img[y1:y2, x1:x2]
 
-            if animal_crop.size > 0:
-                pil_img = Image.fromarray(cv2.cvtColor(animal_crop, cv2.COLOR_BGR2RGB))
-                input_tensor = health_transforms(pil_img).unsqueeze(0).to(device)
+                if animal_crop.size > 0:
+                    pil_img = Image.fromarray(cv2.cvtColor(animal_crop, cv2.COLOR_BGR2RGB))
+                    input_tensor = health_transforms(pil_img).unsqueeze(0).to(device)
 
-                with torch.no_grad():
-                    outputs = health_model(input_tensor)
+                    with torch.no_grad():
+                        outputs = health_model(input_tensor)
 
-                    # --- חישוב אחוזים (החלק החדש) ---
-                    probs = F.softmax(outputs, dim=1)
-                    prob_healthy = probs[0][0].item() * 100
-                    prob_injured = probs[0][1].item() * 100
+                        probs = F.softmax(outputs, dim=1)
+                        prob_healthy = probs[0][0].item() * 100
+                        prob_injured = probs[0][1].item() * 100
 
-                    print(f"\n📊 ANALYSIS:")
-                    print(f"   Healthy: {prob_healthy:.2f}%")
-                    print(f"   Injured: {prob_injured:.2f}%")
-                    # --------------------------------
+                        print(f"\n📊 ANALYSIS for animal ({final_species}):")
+                        print(f"   Healthy: {prob_healthy:.2f}%")
+                        print(f"   Injured: {prob_injured:.2f}%")
 
-                    _, preds = torch.max(outputs, 1)
-                    predicted_idx = preds.item()
+                        # התאמת סף רגישות (Threshold) למערכת רפואית:
+                        # מתריעים על פציעה גם אם המודל חושד ב-4% ומעלה
+                        if prob_injured >= 4.0:
+                            overall_health = 'injured'
+                            print(f"⚠️ Alert! Anomaly detected (Confidence: {prob_injured:.2f}%)")
 
-                    final_health = class_names[predicted_idx]
-                    print(f"🩺 Final Verdict: {final_health}\n")
+        # הוספת הכיתוב לתמונה בגדול ובולט יותר!
+        color = (0, 255, 0) if overall_health == 'healthy' else (0, 0, 255)
+        cv2.putText(annotated_img, f"Health: {overall_health}", (20, 60),
+                    cv2.FONT_HERSHEY_SIMPLEX, 2.5, color, 4)
 
-        # Visuals
-        annotated_img = results[0].plot()
-
-        # בחירת צבע: ירוק לבריא, אדום לפצוע
-        color = (0, 255, 0) if final_health == 'healthy' else (0, 0, 255)
-
-        cv2.putText(annotated_img, f"Health: {final_health}", (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
-
-    # Database
+    # שמירה למסד נתונים
     if quantity > 0:
         try:
-            add_sighting(file.filename, final_species, quantity, final_confidence, final_health)
+            add_sighting(file.filename, final_species, quantity, final_confidence, overall_health)
         except Exception as e:
             print(f"❌ DB Error: {e}")
 

@@ -20,17 +20,16 @@ def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"Training on: {device}")
 
-    # 2. הכנת התמונות (Transforms)
+    # 2. הכנת התמונות (Transforms) - כאן נמצא התיקון הקריטי!
     data_transforms = {
         'train': transforms.Compose([
-            transforms.RandomResizedCrop(224),
+            transforms.Resize((224, 224)), # <-- התיקון שלנו: כיווץ במקום חיתוך
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
         'val': transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
+            transforms.Resize((224, 224)), # <-- התיקון שלנו: כיווץ במקום חיתוך
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
