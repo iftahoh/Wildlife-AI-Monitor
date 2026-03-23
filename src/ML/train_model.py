@@ -118,7 +118,7 @@ def main():
     print(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
 
     # 5. שמירה
-    # --- תיקון מס' 2: שם המודל הנכון ---
+    # -- תיקון מס' 2: שם המודל הנכון ---
     save_path = os.path.join(current_dir, '../models/health_model.pt')
 
     # וידוא שתיקיית המודלים קיימת

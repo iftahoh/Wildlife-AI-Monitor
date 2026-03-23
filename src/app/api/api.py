@@ -114,8 +114,8 @@ async def predict(file: UploadFile = File(...)):
                         print(f"   Injured: {prob_injured:.2f}%")
 
                         # התאמת סף רגישות (Threshold) למערכת רפואית:
-                        # מתריעים על פציעה גם אם המודל חושד ב-4% ומעלה
-                        if prob_injured >= 4.0:
+                        # מתריעים על פציעה גם אם המודל חושד ב-4% ומעלה.
+                        if prob_injured >= 4:
                             overall_health = 'injured'
                             print(f"⚠️ Alert! Anomaly detected (Confidence: {prob_injured:.2f}%)")
 
