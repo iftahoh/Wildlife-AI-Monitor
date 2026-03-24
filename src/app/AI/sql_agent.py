@@ -32,6 +32,7 @@ def text_to_sql(user_question):
     1. Return ONLY the SQL query. No markdown, no explanations.
     2. If the user asks in Hebrew, translate the intent to SQL logic.
     3. Ignore case sensitivity for species names (use LOWER() if needed).
+    4. Do not include Hebrew in the SQL query.
     """
 
     model = genai.GenerativeModel('gemini-2.0-flash-exp')
