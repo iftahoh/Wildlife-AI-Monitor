@@ -4,18 +4,29 @@ from email.header import decode_header
 import requests
 import time
 import os
+from dotenv import load_dotenv
 
-# --- הגדרות ---
-# פרטי הג'ימייל שאליו המצלמה שולחת (מומלץ לפתוח ג'ימייל חדש לפרויקט)
-EMAIL_USER = "wildlife.project.cam@gmail.com"
-EMAIL_PASS = "xxxx xxxx xxxx xxxx"  # סיסמת אפליקציה (App Password) - לא הסיסמה הרגילה!
+load_dotenv()
+
+EMAIL_USER = os.getenv("EMAIL_USER")
+EMAIL_PASS = os.getenv("EMAIL_PASS")
 IMAP_SERVER = "imap.gmail.com"
-
-# הכתובת של השרת שלך (ה-API שבנינו)
 API_URL = "http://127.0.0.1:8000/predict"
+
+if not EMAIL_USER or not EMAIL_PASS:
+    raise EnvironmentError("EMAIL_USER and EMAIL_PASS must be set in your .env file.")
 
 
 def check_email():
+    """Poll the Gmail inbox for unread messages and forward image attachments to the API.
+
+    Connects to Gmail over IMAP, searches for UNSEEN messages, and for each
+    message iterates over its parts looking for file attachments.  Any attachment
+    found is POST-ed to the local FastAPI /predict endpoint as multipart form data.
+
+    The function handles its own exceptions and prints status messages; it does
+    not raise on network or IMAP errors so the polling loop can continue safely.
+    """
     try:
         # התחברות לג'ימייל
         mail = imaplib.IMAP4_SSL(IMAP_SERVER)

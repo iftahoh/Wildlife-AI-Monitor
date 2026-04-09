@@ -13,6 +13,20 @@ ALIASES = {
 }
 
 def voc_to_yolo_bbox(w, h, xmin, ymin, xmax, ymax):
+    """Convert a Pascal VOC bounding box to YOLO normalised format.
+
+    Args:
+        w (int): Image width in pixels.
+        h (int): Image height in pixels.
+        xmin (int): Left edge of the bounding box in pixels.
+        ymin (int): Top edge of the bounding box in pixels.
+        xmax (int): Right edge of the bounding box in pixels.
+        ymax (int): Bottom edge of the bounding box in pixels.
+
+    Returns:
+        tuple[float, float, float, float]: (x_center, y_center, width, height),
+            all normalised to [0, 1] relative to image dimensions.
+    """
     # center x/y, width/height
     x_center = (xmin + xmax) / 2.0
     y_center = (ymin + ymax) / 2.0
@@ -23,10 +37,32 @@ def voc_to_yolo_bbox(w, h, xmin, ymin, xmax, ymax):
     return (x_center / w, y_center / h, bbox_w / w, bbox_h / h)
 
 def normalize_class(name: str) -> str:
+    """Resolve a raw class name from the XML annotation to its canonical CLASSES entry.
+
+    Strips whitespace and applies the ALIASES mapping so variant spellings
+    (e.g. 'fox1', 'fox2') are unified into a single class name.
+
+    Args:
+        name (str): Raw class name as it appears in the XML <name> tag.
+
+    Returns:
+        str: Canonical class name, or the stripped input if no alias exists.
+    """
     name = name.strip()
     return ALIASES.get(name, name)
 
 def convert_xml_file(xml_path: str, out_txt_path: str):
+    """Convert a single Pascal VOC XML annotation file to a YOLO label text file.
+
+    Each recognised object in the XML becomes one line in the output file:
+    ``<class_id> <x_center> <y_center> <width> <height>`` (all normalised).
+    Objects whose class is not in CLASSES are silently skipped.
+
+    Args:
+        xml_path (str): Absolute path to the source .xml annotation file.
+        out_txt_path (str): Absolute path where the YOLO .txt label file will be written.
+                            Parent directories are created automatically.
+    """
     tree = ET.parse(xml_path)
     root = tree.getroot()
 
@@ -59,6 +95,12 @@ def convert_xml_file(xml_path: str, out_txt_path: str):
         f.write("\n".join(lines))
 
 def batch_convert(xml_dir: str, labels_out_dir: str):
+    """Convert all .xml annotation files in a directory to YOLO label files.
+
+    Args:
+        xml_dir (str): Path to the folder containing Pascal VOC .xml files.
+        labels_out_dir (str): Path to the output folder for YOLO .txt label files.
+    """
     for name in os.listdir(xml_dir):
         if not name.lower().endswith(".xml"):
             continue

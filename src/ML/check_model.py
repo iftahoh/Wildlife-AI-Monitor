@@ -1,9 +1,10 @@
 from ultralytics import YOLO
 import os
 
-# --- כאן נשים את הנתיב למודל שלך ---
-# נסה למצוא את הנתיב הזה בדיוק במחשב שלך
-model_path = r"/src/modelsRun\detect\train3\weights\best.pt"
+# Resolve model path relative to the project root
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_project_root = os.path.abspath(os.path.join(_script_dir, "..", ".."))
+model_path = os.path.join(_project_root, "src", "models", "best.pt")
 
 print(f"Checking model at: {model_path}")
 

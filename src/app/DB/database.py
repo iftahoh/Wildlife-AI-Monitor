@@ -9,6 +9,12 @@ DB_PATH = os.path.join(BASE_DIR, "wildlife.db")
 
 
 def init_db():
+    """Create the sightings table if it does not already exist.
+
+    The table stores one row per detection event with the following columns:
+    id, filename, species, quantity, confidence, condition, timestamp.
+    Safe to call multiple times — uses CREATE TABLE IF NOT EXISTS.
+    """
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
@@ -29,6 +35,18 @@ def init_db():
 
 
 def add_sighting(filename, species, quantity, confidence, condition="Unknown"):
+    """Insert a new detection record into the sightings table.
+
+    Args:
+        filename (str): Name of the source image file.
+        species (str): Detected animal species (e.g. 'fox', 'gazelle').
+        quantity (int): Number of animals detected in the image.
+        confidence (float): YOLO confidence score for the primary detection (0.0–1.0).
+        condition (str): Health status — 'healthy', 'injured', or 'N/A'. Defaults to 'Unknown'.
+
+    Returns:
+        int: The auto-generated id of the newly inserted row.
+    """
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
@@ -45,7 +63,12 @@ def add_sighting(filename, species, quantity, confidence, condition="Unknown"):
 
 # --- הפונקציה שהייתה חסרה לך ---
 def get_all_sightings():
-    """שולף את כל ההיסטוריה מהטבלה, מהחדש לישן"""
+    """Fetch all sighting records ordered from newest to oldest.
+
+    Returns:
+        list[tuple]: Each tuple contains (id, filename, species, quantity,
+                     confidence, condition, timestamp).
+    """
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM sightings ORDER BY timestamp DESC')
@@ -55,7 +78,20 @@ def get_all_sightings():
 
 
 def run_custom_query(sql_query):
-    """מריץ שאילתת SQL שנוצרה על ידי ה-AI ומחזיר את התוצאות"""
+    """Execute an arbitrary SQL query and return the results.
+
+    Intended for AI-generated SELECT queries from the SQL agent.
+    Non-SELECT statements (e.g. UPDATE/DELETE) are executed but return no rows.
+
+    Args:
+        sql_query (str): A valid SQLite query string.
+
+    Returns:
+        tuple: (rows, columns, error) where:
+            - rows (list[tuple] | None): Result rows for SELECT queries.
+            - columns (list[str] | None): Column names for SELECT queries.
+            - error (str | None): Error message if something went wrong, else None.
+    """
     try:
         conn = sqlite3.connect(DB_PATH)  # וודא ש-DB_PATH מוגדר כמו בתיקונים הקודמים
         cursor = conn.cursor()

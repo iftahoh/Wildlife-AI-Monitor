@@ -3,6 +3,19 @@ import os
 
 
 def extract_frames_from_folder(source_folder, dest_folder, interval=30):
+    """Extract frames from every video file in a folder and save them as JPEG images.
+
+    Frames are sampled every `interval` frames (e.g. interval=30 keeps one
+    frame per second at 30 fps).  Output filenames encode the animal type,
+    video name, and original frame number for traceability.
+
+    Args:
+        source_folder (str): Path to a folder containing video files.
+                             The folder's base name is used as the animal-type prefix.
+        dest_folder (str): Path where extracted JPEG frames will be saved.
+                           Created automatically if it does not exist.
+        interval (int): Save one frame every this many frames. Defaults to 30.
+    """
     if not os.path.exists(dest_folder):
         os.makedirs(dest_folder)
 

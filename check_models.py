@@ -1,9 +1,14 @@
 import google.generativeai as genai
 import os
+from dotenv import load_dotenv
 
-# ⚠️ שים כאן את ה-API Key שלך
-GOOGLE_API_KEY = "AIzaSyDLerzOUatS6qLLjKOeBXSDY_gTKEHufvM"
-genai.configure(api_key=GOOGLE_API_KEY)
+load_dotenv()
+
+_api_key = os.getenv("GOOGLE_API_KEY")
+if not _api_key:
+    raise EnvironmentError("GOOGLE_API_KEY is not set. Add it to your .env file.")
+
+genai.configure(api_key=_api_key)
 
 print("🔍 בודק מודלים זמינים...")
 try:

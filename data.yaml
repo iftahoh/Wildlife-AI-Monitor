@@ -1,8 +1,9 @@
-# נתיב מלא לתיקייה הראשית של הנתונים
-path: "C:/Users/iftah/Desktop/All Files/לימודים/שנה ג/פרוייקט גמר/Wildlife-AI-Monitor/data/YOLO"
+# Path is relative to the repo root (where this file lives).
+# Ultralytics resolves it relative to the yaml file location.
+path: data/YOLO
 
 train: images/train
-val: images/train
+val: images/val
 
 names:
   0: fox

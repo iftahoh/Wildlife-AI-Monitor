@@ -14,7 +14,8 @@ root_dir = os.path.abspath(os.path.join(current_dir, "../../.."))
 sys.path.append(root_dir)
 
 try:
-    from src.app.DB.database import get_all_sightings
+    from src.app.DB.database import get_all_sightings, run_custom_query
+    from src.app.AI.sql_agent import text_to_sql
 except ImportError as e:
     st.error(f"Import error: {e}")
     st.stop()
@@ -29,6 +30,12 @@ st.set_page_config(
 
 
 def inject_styles(theme_mode):
+    """Inject global CSS custom properties and component overrides for the chosen theme.
+
+    Args:
+        theme_mode (str): Either "Dark" or "Light". Controls background colours,
+                          panel fills, text colours, and accent shades.
+    """
     is_dark = theme_mode == "Dark"
     bg = "#0f1418" if is_dark else "#f4efe6"
     bg_end = "#161d22" if is_dark else "#f7f2e9"
@@ -271,6 +278,11 @@ def inject_styles(theme_mode):
 
 
 def latest_sighting():
+    """Return the most recent sighting record as a dictionary, or None if the DB is empty.
+
+    Returns:
+        dict | None: Keys: id, filename, species, quantity, confidence, condition, timestamp.
+    """
     rows = get_all_sightings()
     if not rows:
         return None
@@ -288,6 +300,13 @@ def latest_sighting():
 
 
 def render_metric_card(label, value, note):
+    """Render a styled metric card using raw HTML injected via st.markdown.
+
+    Args:
+        label (str): Small uppercase label shown above the value.
+        value (str): Large primary value displayed in the card.
+        note (str): Smaller descriptive text shown below the value.
+    """
     st.markdown(
         f"""
         <div class="metric-card">
@@ -301,6 +320,11 @@ def render_metric_card(label, value, note):
 
 
 def render_history(df):
+    """Render the sightings history table with human-readable column names.
+
+    Args:
+        df (pd.DataFrame): Raw sightings DataFrame with columns matching the DB schema.
+    """
     st.markdown('<div class="section-title">Recent Sightings</div>', unsafe_allow_html=True)
     st.markdown(
         '<p class="section-copy">A quick operational view of the latest records captured by the monitor.</p>',
@@ -324,6 +348,12 @@ def render_history(df):
 
 
 def render_statistics(df):
+    """Render two Altair charts: species distribution (donut) and hourly activity (bar).
+
+    Args:
+        df (pd.DataFrame): Sightings DataFrame with at least 'species', 'quantity',
+                           and 'timestamp' columns.
+    """
     species_colors = ["#8db45a", "#d29a55", "#a56a46", "#64843b", "#d7bd8c"]
     hourly_color = "#d29a55"
 
@@ -425,7 +455,7 @@ with summary_col1:
 with summary_col2:
     st.metric("Species Seen", unique_species)
 with summary_col3:
-    st.metric("Latest Health Status", latest_record["condition"] if latest_record else "No data")
+    st.metric("Latest Species", latest_record["species"] if latest_record else "No data")
 
 analysis_tab, history_tab, stats_tab, ai_tab = st.tabs(
     ["Image Analysis", "History", "Statistics", "AI Status"]
@@ -575,14 +605,22 @@ with analysis_tab:
                 with metric_col2:
                     render_metric_card("Count", record["quantity"], "Animals counted in this sighting")
 
-                metric_col3, metric_col4 = st.columns(2)
-                with metric_col3:
-                    confidence = (
-                        f"{float(record['confidence']):.1%}" if record["confidence"] is not None else "N/A"
-                    )
-                    render_metric_card("Confidence", confidence, "Model confidence score")
-                with metric_col4:
-                    render_metric_card("Health", record["condition"] or "Unknown", "Latest health classification")
+                confidence = (
+                    f"{float(record['confidence']):.1%}" if record["confidence"] is not None else "N/A"
+                )
+                condition = record["condition"]
+                show_health = condition and condition != "N/A"
+
+                if show_health:
+                    metric_col3, metric_col4 = st.columns(2)
+                    with metric_col3:
+                        render_metric_card("Confidence", confidence, "Model confidence score")
+                    with metric_col4:
+                        render_metric_card("Health", condition, "Latest health classification")
+                else:
+                    metric_col3, _ = st.columns(2)
+                    with metric_col3:
+                        render_metric_card("Confidence", confidence, "Model confidence score")
 
                 st.markdown(
                     f"""
@@ -650,11 +688,57 @@ with stats_tab:
         )
 
 with ai_tab:
-    st.markdown('<div class="section-title">AI Status</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">AI Data Explorer</div>', unsafe_allow_html=True)
     st.markdown(
-        '<p class="section-copy">This area remains separated from your UI scope and is intentionally left as a status panel only.</p>',
+        '<p class="section-copy">Ask a question in plain language and the AI will query the sightings database for you.</p>',
         unsafe_allow_html=True,
     )
-    st.info(
-        "The AI chat feature is intentionally out of scope for this UI pass. The redesigned dashboard keeps it isolated so it does not interfere with the main user flow."
+
+    st.markdown(
+        """
+        <div class="soft-card">
+            <h4>Examples</h4>
+            <p>• How many foxes were spotted this week?</p>
+            <p>• כמה תצפיות נרשמו היום?</p>
+            <p>• Show me all sightings with confidence above 0.8</p>
+            <p>• Which species appeared most often?</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
+
+    user_question = st.text_input(
+        "Ask about the sightings data",
+        placeholder="e.g. How many gazelles were seen this week?",
+        key="ai_question",
+        label_visibility="collapsed",
+    )
+
+    if st.button("Ask", type="primary", key="ai_ask_button"):
+        if not user_question.strip():
+            st.warning("Please enter a question first.")
+        else:
+            with st.spinner("Generating SQL and fetching results..."):
+                try:
+                    generated_sql = text_to_sql(user_question)
+
+                    with st.expander("Generated SQL", expanded=False):
+                        st.code(generated_sql, language="sql")
+
+                    rows, columns, error = run_custom_query(generated_sql)
+
+                    if error:
+                        st.error(f"Query error: {error}")
+                    elif rows is not None:
+                        if rows:
+                            result_df = __import__("pandas").DataFrame(rows, columns=columns)
+                            st.dataframe(result_df, hide_index=True, use_container_width=True)
+                        else:
+                            st.info("The query ran successfully but returned no results.")
+                except EnvironmentError as env_err:
+                    st.error(
+                        f"Configuration error: {env_err}. "
+                        "Make sure GOOGLE_API_KEY is set in your .env file."
+                    )
+                except Exception as exc:
+                    st.error(f"Unexpected error: {exc}")

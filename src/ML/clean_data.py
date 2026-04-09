@@ -2,6 +2,16 @@ import os
 
 
 def clean_unlabeled_images(images_dir, labels_dir):
+    """Delete image files that have no matching YOLO label file.
+
+    For each .jpg / .jpeg / .png in `images_dir`, the function looks for a
+    corresponding .txt file in `labels_dir` with the same stem.  Images
+    without a label are removed from disk to keep the dataset clean.
+
+    Args:
+        images_dir (str): Path to the folder containing image files.
+        labels_dir (str): Path to the folder containing YOLO .txt label files.
+    """
     print(f"Cleaning images in: {images_dir}")
 
     removed_count = 0
@@ -25,8 +35,11 @@ def clean_unlabeled_images(images_dir, labels_dir):
 
 
 if __name__ == "__main__":
-    # נתיבים מלאים (כמו שהגדרנו קודם)
-    base_dir = r"/data/YOLO"
+    # Resolve the YOLO data folder relative to this script's location
+    current_script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.abspath(os.path.join(current_script_dir, "..", ".."))
+    base_dir = os.path.join(project_root, "data", "YOLO")
+
     images_train = os.path.join(base_dir, "images", "train")
     labels_train = os.path.join(base_dir, "labels", "train")
 

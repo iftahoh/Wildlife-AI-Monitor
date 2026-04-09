@@ -1,3 +1,7 @@
+# NOTE: Health model training — currently disabled.
+# To re-enable health analysis, set HEALTH_ENABLED = True in src/app/api/api.py
+# and train the model here first, then place the output at src/models/health_model.pt
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -8,6 +12,21 @@ import time
 
 
 def main():
+    """Train a ResNet50 binary classifier (healthy / injured) using transfer learning.
+
+    Expects the following folder structure under the project's data/ directory:
+        data/train/healthy/   — healthy animal images
+        data/train/injured/   — injured animal images
+        data/val/healthy/
+        data/val/injured/
+
+    All convolutional layers are frozen; only the final FC layer is trained.
+    The trained weights are saved to src/models/health_model.pt.
+
+    NOTE: Health model training is currently disabled.
+    To re-enable health analysis, set HEALTH_ENABLED = True in src/app/api/api.py
+    and place the trained output at src/models/health_model.pt.
+    """
     # --- תיקון מס' 1: חישוב נתיב חכם ---
     # מוצא את המיקום של הקובץ הזה (train_model.py)
     current_dir = os.path.dirname(os.path.abspath(__file__))
